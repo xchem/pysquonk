@@ -3,7 +3,6 @@ import configparser
 import requests
 import json
 import curlify
-
 from functions import check_response
 
 
@@ -73,4 +72,14 @@ class SquonkJob:
         print(str('job ' + str(job_id) + ' ' + str(job_status)))
         return job_id
 
+    def check_job(self, idno, token):
+        url = str(self.base_url + '/' + self.job_post_endpoint + idno + '/status')
+        print(url)
+        headers = {'Authorization': str('bearer ' + token),
+                   'SquonkUsername': 'user101',
+                   'Accept-Encoding': 'gzip'}
 
+        response = requests.post(url, headers=headers, verify=False, allow_redirects=True)
+        print(response.history)
+        print(curlify.to_curl(response.request))
+        print(response.content)
