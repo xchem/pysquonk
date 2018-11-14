@@ -1,7 +1,13 @@
 username: rskyner
+sevice_name: pipelines.docking.rdock.basic.v2
 options:
-  -
+  num: 10
+  top: 10
 input_data:
-  -
+  ligands:
+    filename:
+    type:
+  config:
+    filename:
+    type:
 input_metadata:
-  -

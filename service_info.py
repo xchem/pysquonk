@@ -1,7 +1,5 @@
 import configparser
 import requests
-
-from auth import SquonkAuth
 from functions import check_response
 
 
@@ -19,9 +17,7 @@ class SquonkServiceInfo:
         # config read for list_service_ids
         self.ids_endpoint = settings.get('ids', 'endpoint')
 
-
-    # uses http protocol
-    def list_services(self, token=SquonkAuth().get_token()):
+    def list_services(self, token):
 
         url = str(self.base_url + '/' + self.ids_endpoint)
 
@@ -34,25 +30,25 @@ class SquonkServiceInfo:
 
         check_response(response)
 
-        return response
+        return response.json()
 
-    def list_service_ids(self):
+    def list_service_ids(self, token):
 
-        response = self.list_services
+        response = self.list_services(token=token)
 
-        out = [method['id'] for method in response.json()]
-
-        return out
-
-    def list_service_info(self, service_id):
-
-        response = self.list_services()
-
-        out = [method for method in response.json() if method['id'] == service_id]
+        out = [method['id'] for method in response]
 
         return out
 
-    def list_full_service_info(self, service_id, token=SquonkAuth().get_token()):
+    def list_service_info(self, service_id, token):
+
+        response = self.list_services(token=token)
+
+        out = [method for method in response if method['id'] == service_id]
+
+        return out
+
+    def list_full_service_info(self, service_id, token):
         url = str(self.base_url + '/' + self.ids_endpoint + '/' + service_id)
 
         headers = {
@@ -66,9 +62,9 @@ class SquonkServiceInfo:
 
         return response.json()
 
-    def list_service_info_field(self, service_id, field):
+    def list_service_info_field(self, service_id, field, token):
 
-        response = self.list_full_service_info(service_id)
+        response = self.list_full_service_info(service_id, token)
 
         field = response[field]
 

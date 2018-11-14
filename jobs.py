@@ -1,10 +1,13 @@
+import yaml
 import configparser
 import requests
+import json
+import curlify
 
 from functions import check_response
 
-class SubmitJob:
 
+class SquonkJob:
     def __init__(self):
         settings_file = 'config.ini'
         settings = configparser.ConfigParser()
@@ -18,26 +21,43 @@ class SubmitJob:
         self.job_post_endpoint = settings.get('job', 'endpoint')
         self.job_post_content_type = settings.get('job', 'content_type')
 
-    def post_job(self, token, username, options, input_data, input_metadata, service_id):
+    def post_job_from_yaml(self, ymlin, token):
+        with open(ymlin, 'r') as ymlfile:
+            job_setup = yaml.load(ymlfile)
 
-        url = str(self.base_url + '/' + self.job_post_endpoint + '/' + service_id)
+        options = job_setup['options']
+        inputs = job_setup['input_data']
+        username = job_setup['username']
+        service_name = job_setup['service_name']
+        content_type = job_setup['content_type']
+
+        url = str(self.base_url + '/' + self.job_post_endpoint + service_name)
 
         headers = {
+            'Content-Type': content_type,
             'Authorization': str('bearer ' + token),
-            'Content-Type': self.job_post_content_type,
             'SquonkUsername': username,
         }
 
         files = {
-            'options': options,
-            'input_data': input_data,
-            'input_metadata': input_metadata,
+            'options': (None, json.dumps(options))
         }
 
-        response = requests.post(url, headers=headers, files=files, verify=False)
+        for input_key in inputs.keys():
+            files[input_key] = ((inputs[input_key]['name']), open((inputs[input_key]['name']), 'rb'),
+                                inputs[input_key]['type'])
+
+        print(files)
+
+        response = requests.post(url, headers=headers, files=files, verify=False, allow_redirects=True)
+
+        for resp in response.history:
+            print(resp.status_code, resp.url)
+
+        print(curlify.to_curl(response.request))
 
         check_response(response)
 
-        job_id = str(response.json()['job_id'])
+        job_id = response.json()
 
         return job_id

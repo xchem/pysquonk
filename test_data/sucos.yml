@@ -1,0 +1,12 @@
+username: rskyner
+service_name: pipelines.rdkit.sucos.basic
+content_type: multipart/mixed
+options:
+  arg.target: 1
+input_data:
+  input:
+    name: test_data/sucos_data/4e3g_lig.mol
+    type: application/x-squonk-dataset-molecule+json
+  target:
+    name: test_data/sucos_data/mols.sdf
+    type: application/x-squonk-dataset-molecule+json
