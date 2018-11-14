@@ -62,18 +62,15 @@ class SquonkJob:
             infiles[input_key] = ((outfile), open(outfile, 'rb'))
 
         print(infiles)
-        #
+
         response = requests.post(url, headers=headers, files=infiles, verify=False, allow_redirects=True)
+        check_response(response)
 
-        for resp in response.history:
-            print(resp.status_code, resp.url)
+        job_json = response.json()
+        job_id = job_json['jobDefinition']['jobId']
+        job_status = job_json['status']
 
-        # print(curlify.to_curl(response.request))
+        print(str('job ' + str(job_id) + ' ' + str(job_status)))
+        return job_id
 
-        # check_response(response)
 
-        # job_id = response
-
-        # return job_id
-        # print(response.history)
-        print(response.content)
