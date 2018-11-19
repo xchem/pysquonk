@@ -4,6 +4,7 @@ from rdkit import Chem
 
 
 def dict_from_mol(mol_string):
+    """Take a molecule block, in a string, and write it to a dictionary in the correct format for squonk."""
     json_dict = {'uuid': str(uuid.uuid1()),
                  'source': mol_string,
                  'type': 'mol'}
@@ -12,6 +13,8 @@ def dict_from_mol(mol_string):
 
 
 def sdf_to_mol_dicts(sdf_file):
+    """Take an SDMolFile and convert into a list of dicts containing individual molecules in the correct format for 
+    squonk."""
     suppl = Chem.SDMolSupplier(sdf_file)
     mol_json_list = []
     for mol in suppl:
@@ -22,6 +25,7 @@ def sdf_to_mol_dicts(sdf_file):
 
 
 def mol_to_mol_dict(mol_file):
+    """Take a mol file, and pass to dict_from_mol, to create a dictionary in the correct format for squonk."""
     with open(mol_file, 'r') as f:
         mol_string = f.read()
     mol_json = dict_from_mol(mol_string)
@@ -30,6 +34,7 @@ def mol_to_mol_dict(mol_file):
 
 
 def dict_to_json_file(outfile, jdict):
+    """Take a dictionary, or list of dictionaries (jdict) and an outfile (outfile) and write jdict to outfile."""
     with open(outfile, 'w') as f:
         json.dump(jdict, f)
 
