@@ -1,4 +1,5 @@
 import uuid
+import json
 from rdkit import Chem
 
 
@@ -26,3 +27,10 @@ def mol_to_mol_dict(mol_file):
     mol_json = dict_from_mol(mol_string)
 
     return mol_json
+
+
+def dict_to_json_file(outfile, jdict):
+    with open(outfile, 'w') as f:
+        json.dump(jdict, f)
+
+    return outfile

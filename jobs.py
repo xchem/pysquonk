@@ -3,9 +3,8 @@ import configparser
 import requests
 import json
 import curlify
-import uuid
+import auth
 from functions import check_response
-from rdkit import Chem
 
 
 class SquonkJob:
@@ -21,39 +20,17 @@ class SquonkJob:
         # config read for posting a job
         self.job_post_endpoint = settings.get('job', 'endpoint')
         self.job_post_content_type = settings.get('job', 'content_type')
+        self.auth = auth.SquonkAuth()
+        self.token = self.auth.get_token()
 
-    def prepare_input_json(self, file, format, options):
-        jdict = {
-            'source': open(file, 'rb').read(),
-            'format': format,
-            'values': options,
-                 }
-
-        outfile = str(file.split('.')[0] + '.json')
-
-        with open(outfile, 'w') as f:
-            json.dump(jdict, f)
-
-        return outfile
-
-    def post_job_from_yaml(self, ymlin, token):
-        with open(ymlin, 'r') as ymlfile:
-            job_setup = yaml.load(ymlfile)
-
-        inputs = job_setup['input_data']
-        username = job_setup['username']
-        service_name = job_setup['service_name']
-        content_type = job_setup['content_type']
-
+    def post_job(self, input_json_files, input_json_metadata):
         url = str(self.base_url + '/' + self.job_post_endpoint + service_name)
 
         headers = {
-            'Content-Type': content_type,
-            'Authorization': str('bearer ' + token),
-            'SquonkUsername': username,
+            'Content-Type': 'mixed/multipart',
+            'Authorization': str('bearer ' + self.token),
+            'SquonkUsername': 'user101',
         }
-
-        infiles = {}
 
         for input_key in inputs.keys():
             outfile = self.prepare_input_json(file=inputs[input_key]['name'], format=inputs[input_key]['type'],
