@@ -21,6 +21,8 @@ class SquonkAuth:
 
     # uses https protocol
     def get_token(self):
+        """Get a token from squonk's authorisation protocol. This should be posted with all further requests, and is
+        valid for ~5 minutes."""
 
         # -H option in curl request
         headers = {
