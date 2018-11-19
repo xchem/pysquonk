@@ -3,7 +3,9 @@ import configparser
 import requests
 import json
 import curlify
+import uuid
 from functions import check_response
+from rdkit import Chem
 
 
 class SquonkJob:
@@ -28,8 +30,6 @@ class SquonkJob:
                  }
 
         outfile = str(file.split('.')[0] + '.json')
-
-        print(jdict)
 
         with open(outfile, 'w') as f:
             json.dump(jdict, f)
@@ -60,8 +60,6 @@ class SquonkJob:
                                     options=inputs[input_key]['options'])
             infiles[input_key] = ((outfile), open(outfile, 'rb'))
 
-        print(infiles)
-
         response = requests.post(url, headers=headers, files=infiles, verify=False, allow_redirects=True)
         check_response(response)
 
@@ -69,8 +67,7 @@ class SquonkJob:
         job_id = job_json['jobDefinition']['jobId']
         job_status = job_json['status']
 
-        print(str('job ' + str(job_id) + ' ' + str(job_status)))
-        return job_id
+        return job_id, job_status
 
     def check_job(self, idno, token):
         url = str(self.base_url + '/' + self.job_post_endpoint + idno + '/status')
@@ -83,3 +80,20 @@ class SquonkJob:
         print(response.history)
         print(curlify.to_curl(response.request))
         print(response.content)
+
+
+def dict_from_mol(mol_file):
+    with open(mol_file, 'r') as f:
+        mol_string = f.read()
+    json_dict = {'uuid': str(uuid.uuid1()),
+                 'source': mol_string,
+                 'type': 'mol'}
+
+    return json_dict
+
+
+def sdf_to_mol_dicts(sdf_file):
+    suppl = Chem.SDMolSupplier(sdf_file)
+    mol_json_list = []
+    for mol in suppl:
+        pass

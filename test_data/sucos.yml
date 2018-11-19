@@ -12,3 +12,8 @@ input_data:
     type: sdf
     options:
       arg.target: 1
+input_metadata:
+  input:
+    type: org.squonk.types.MoleculeObject
+  target:
+    type: org.squonk.types.MoleculeObject
