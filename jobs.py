@@ -1,10 +1,10 @@
-import yaml
 import configparser
+import shutil, os
 import requests
-import json
 import curlify
 import auth
 from functions import check_response
+from molops import dict_to_json_file
 
 
 class SquonkJob:
@@ -22,39 +22,68 @@ class SquonkJob:
         self.job_post_content_type = settings.get('job', 'content_type')
         self.auth = auth.SquonkAuth()
         self.token = self.auth.get_token()
+        self.job_id = None
 
-    def post_job(self, input_json_files, input_json_metadata):
+    def post_job(self, input_files, input_names, service_name):
         url = str(self.base_url + '/' + self.job_post_endpoint + service_name)
 
+        input_names = [str(x + '_data') for x in input_names]
+
         headers = {
-            'Content-Type': 'mixed/multipart',
+            'Content-Type': 'multipart/mixed',
+            'Accept-Encoding': 'gzip',
             'Authorization': str('bearer ' + self.token),
             'SquonkUsername': 'user101',
+            'Accept': 'application/x-squonk-metadata+json'
         }
 
-        for input_key in inputs.keys():
-            outfile = self.prepare_input_json(file=inputs[input_key]['name'], format=inputs[input_key]['type'],
-                                    options=inputs[input_key]['options'])
-            infiles[input_key] = ((outfile), open(outfile, 'rb'))
+        meta_dict = {'type': 'org.squonk.types.MoleculeObject'}
 
-        response = requests.post(url, headers=headers, files=infiles, verify=False, allow_redirects=True)
+        files = {'options': (None, {})}
+
+        tmp_files = []
+
+        for i in range(0, len(input_files)):
+            shutil.copy(input_files[i], input_files[i].split('/')[-1])
+            tmp_files.append(input_files[i].split('/')[-1])
+            os.system(str('gzip ' + input_files[i].split('/')[-1]))
+            input_files[i] = str(input_files[i].split('/')[-1] + '.gz')
+            tmp_files.append(str(input_files[i]))
+
+        for name, f in zip(input_names, input_files):
+            files[name] = (f, open(f, 'rb'))
+            meta_name = str(name.replace('_data', '_metadata'))
+            meta_file = meta_name.replace('_metadata', '') + '.metadata'
+            dict_to_json_file(outfile=meta_file, jdict=meta_dict)
+            files[meta_name] = (meta_file, open(meta_file, 'rb'))
+            tmp_files.append(meta_file)
+
+        print(files)
+
+        response = requests.post(url, headers=headers, files=files, verify=False, allow_redirects=True)
+        # print(curlify.to_curl(response.request))
         check_response(response)
 
         job_json = response.json()
-        job_id = job_json['jobDefinition']['jobId']
+        self.job_id = job_json['jobDefinition']['jobId']
         job_status = job_json['status']
 
-        return job_id, job_status
+        for f in tmp_files:
+            if os.path.isfile(f):
+                os.remove(f)
 
-    def check_job(self, idno, token):
-        url = str(self.base_url + '/' + self.job_post_endpoint + idno + '/status')
-        print(url)
-        headers = {'Authorization': str('bearer ' + token),
-                   'SquonkUsername': 'user101',
-                   'Accept-Encoding': 'gzip'}
+        return self.job_id, job_status
 
-        response = requests.post(url, headers=headers, verify=False, allow_redirects=True)
-        print(response.history)
-        print(curlify.to_curl(response.request))
-        print(response.content)
+    def check_job(self):
+        if self.job_id:
+            url = str(self.base_url + '/' + self.job_post_endpoint + self.job_id + '/status')
+            print(url)
+            headers = {'Authorization': str('bearer ' + self.token),
+                       'SquonkUsername': 'user101'}
+
+            response = requests.get(url, headers=headers, verify=False, allow_redirects=True)
+            print(curlify.to_curl(response.request))
+            print(response.content)
+        else:
+            raise Exception('Please submit a job first!')
 

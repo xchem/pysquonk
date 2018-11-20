@@ -1,5 +1,6 @@
 import uuid
 import json
+import gzip
 from rdkit import Chem
 
 
@@ -7,7 +8,7 @@ def dict_from_mol(mol_string):
     """Take a molecule block, in a string, and write it to a dictionary in the correct format for squonk."""
     json_dict = {'uuid': str(uuid.uuid1()),
                  'source': mol_string,
-                 'type': 'mol'}
+                 'format': 'mol'}
 
     return json_dict
 
@@ -34,8 +35,11 @@ def mol_to_mol_dict(mol_file):
 
 
 def dict_to_json_file(outfile, jdict):
-    """Take a dictionary, or list of dictionaries (jdict) and an outfile (outfile) and write jdict to outfile."""
+    """Take a dictionary, or list of dictionaries (jdict) and an outfile (outfile) and write jdict to gzipped outfile."""
+    print(json.dumps(jdict))
     with open(outfile, 'w') as f:
         json.dump(jdict, f)
 
     return outfile
+
+

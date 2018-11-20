@@ -42,7 +42,7 @@ class SquonkAuth:
         check_response(response)
 
         # return token as string
-        token = str(response.json()['access_token'].decode('ascii'))
+        token = str(response.json()['access_token'])
 
         return token
 
