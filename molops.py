@@ -36,9 +36,8 @@ def mol_to_mol_dict(mol_file):
 
 def dict_to_json_file(outfile, jdict):
     """Take a dictionary, or list of dictionaries (jdict) and an outfile (outfile) and write jdict to gzipped outfile."""
-    print(json.dumps(jdict))
     with open(outfile, 'w') as f:
-        json.dump(jdict, f)
+        json.dump(json.dumps(jdict), f)
 
     return outfile
 
